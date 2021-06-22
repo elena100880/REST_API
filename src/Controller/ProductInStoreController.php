@@ -101,16 +101,24 @@ class ProductInStoreController extends AbstractController
             $name = (strlen($data['name']) < 100 ) ? $data['name'] : throw new Exception ("Invalid length of NAME");
 
             $amount = $data['amount'] ?? 0;
-            if ( !is_int($data['amount']) or $data['amount'] < 0) throw new Exception ("Invalid value of AMOUNT");
+            if ( !is_int($amount) or $amount < 0) throw new Exception ("Invalid value of AMOUNT");
         }
         catch (Exception $e) {
             return new Response ($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
 
+    //adding product to DB:
+        $product = new ProductInStore;
+        $product->setAmount($amount);
+        $product->setName($name);
 
-
+        $em = $this->getDoctrine()->getManager();
+        $em -> persist($product);
+        $em -> flush();
 
         return new Response ("Success", Response::HTTP_OK);
-        
+        /**
+         * @todo Response if Server error
+         */
     }
 }
