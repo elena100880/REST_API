@@ -1,5 +1,5 @@
 products_list:
-    path: /products/list
+    path: /products
     controller: App\Controller\ProductInStoreController::products_list
     methods: GET
 
