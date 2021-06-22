@@ -1,3 +1,5 @@
-#index:
-#    path: /
-#    controller: App\Controller\DefaultController::index
+products_list:
+    path: /products/list
+    controller: App\Controller\ProductInStoreController::products_list
+    methods: GET
+
