@@ -8,5 +8,14 @@ product_delete:
     controller: App\Controller\ProductInStoreController::product_delete
     methods: DELETE
 
+product_edit:
+    path: /products/{id}
+    controller: App\Controller\ProductInStoreController::product_edit
+    methods: PATCH
+
+product_add:
+    path: /products
+    controller: App\Controller\ProductInStoreController::product_add
+    methods: POST
   
 

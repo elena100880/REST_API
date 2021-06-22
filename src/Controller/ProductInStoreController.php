@@ -19,21 +19,27 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 class ProductInStoreController extends AbstractController
 {
     public function product_list(Request $request): Response  
-    /* amount - 0 (not in store), 1 - all products in store (default), 5 - products >5 in store
-     * page - from 1, default 1
-     * elements - max 20, default 2
-     */
     {
-        
+        /* amount - 0 (not in store), 1 - all products in store (default), 5 - products >5 in store
+        * page - from 1, default 1
+        * elements - max 1000, default 2
+        */
+            
     //validating parameters:
+        function string_is_integer_and_more_zero ($string)
+        {
+            return (is_numeric($string) and ($string - floor($string) == 0) and $string >= 0 );
+        }
+
         try {            
             $amount = $request->query->get('amount') ?? 1;
             
-            $page = $request->query->get('page') ?? 1;
-            if ( !is_int($page) or $page == 0) throw new Exception ("Invalid value of PAGE");
-
+            $page = ($request->query->get('page')) ?? 1;
+            $r = string_is_integer_and_not_zero ($page);
+            if (!string_is_integer_and_more_zero ($page)) throw new Exception ("Invalid value of PAGE");
+            
             $elements = $request->query->get('elements') ?? 2;
-            if ( !is_int($elements) or $elements == 0) throw new Exception ("Invalid value of ELEMENTS");
+            if ( !string_is_integer_and_more_zero ($elements) or $elements > 1000) throw new Exception ("Invalid value of ELEMENTS");
         }
         catch (Exception $e) {
             return new Response ($e->getMessage(), Response::HTTP_BAD_REQUEST);
@@ -69,5 +75,42 @@ class ProductInStoreController extends AbstractController
                             -> execute();
         if ($queryBuilder) return new Response ("Success", Response::HTTP_OK);
         else return new Response ("Item NOT FOUND", Response::HTTP_NOT_FOUND);
+    }
+
+    public function product_add (Request $request): Response
+    {
+        /* required json data from Request:
+         * {    
+         *      "name": "Product X",  // 10 characters <=length <= 100 characters
+         *      "amount": 1,   // 0 for default
+         * }
+         */
+
+        $json = file_get_contents('php://input');
+
+    //validating parameters:
+        function valid_json($string)  { 
+            json_decode($string);
+            return json_last_error() === 0;
+        }
+        try 
+        {
+            $data = (valid_json($json)) ? json_decode($json, true) : throw new Exception('Invalid json');
+
+            if (!isset($data['name'])) throw new Exception('Invalid key for NAME');
+            $name = (strlen($data['name']) < 100 ) ? $data['name'] : throw new Exception ("Invalid length of NAME");
+
+            $amount = $data['amount'] ?? 0;
+            if ( !is_int($data['amount']) or $data['amount'] < 0) throw new Exception ("Invalid value of AMOUNT");
+        }
+        catch (Exception $e) {
+            return new Response ($e->getMessage(), Response::HTTP_BAD_REQUEST);
+        }
+
+
+
+
+        return new Response ("Success", Response::HTTP_OK);
+        
     }
 }
