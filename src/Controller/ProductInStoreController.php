@@ -18,7 +18,7 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 
 class ProductInStoreController extends AbstractController
 {
-    public function products_list(Request $request): Response  
+    public function product_list(Request $request): Response  
     /* amount - 0 (not in store), 1 - all products in store (default), 5 - products >5 in store
      * page - from 1, default 1
      * elements - max 20, default 2
@@ -56,5 +56,18 @@ class ProductInStoreController extends AbstractController
 
         $returnResponse = ["data" => $productsPage, "total" => $totalElements];
         return $this->json($returnResponse);  
+    }
+
+    public function product_delete (Request $request, $id): Response
+    {
+        $em = $this->getDoctrine()->getManager();
+        $queryBuilder = $em -> createQueryBuilder()
+                            -> delete ('App\Entity\ProductInStore', 'p')
+                            -> setParameter ('id', $id)
+                            -> where ('p.id = :id')
+                            -> getQuery()
+                            -> execute();
+        if ($queryBuilder) return new Response ("Success", Response::HTTP_OK);
+        else return new Response ("Item NOT FOUND", Response::HTTP_NOT_FOUND);
     }
 }
