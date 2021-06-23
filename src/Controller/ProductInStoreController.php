@@ -72,7 +72,7 @@ class ProductInStoreController extends AbstractController
         try {$result = $queryBuilder -> execute(); }               
         catch (\Exception $e) {return new Response ("DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);}
 
-        if ($queryBuilder) return new Response ("Success", Response::HTTP_OK);
+        if ($result) return new Response ("Success", Response::HTTP_OK);
         else return new Response ("Item NOT FOUND", Response::HTTP_NOT_FOUND);
     }
 
@@ -93,7 +93,7 @@ class ProductInStoreController extends AbstractController
             $data = ($this->valid_json($json)) ? json_decode($json, true) : throw new Exception('Invalid json');
 
             $name = $data['name'] ?? throw new Exception('Invalid key for NAME');
-            if (!is_string($data['name']) or strlen($data['name']) > 5) throw new Exception('Invalid value for NAME');
+            if (!is_string($data['name']) or strlen($data['name']) > 50) throw new Exception('Invalid value for NAME');
 
             $amount = $data['amount'] ?? 0;
             if ( !is_int($amount) or $amount < 0) throw new Exception ("Invalid value of AMOUNT");
@@ -131,8 +131,8 @@ class ProductInStoreController extends AbstractController
         {
             $data = ($this->valid_json($json)) ? json_decode($json, true) : throw new Exception('Invalid json');
 
-            if (sset($data['name'])) $name = $data['name'];
-            if (!is_string($data['name']) or strlen($data['name']) > 5) throw new Exception('Invalid value for NAME');
+            if (isset($data['name'])) $name = $data['name'];
+            if (!is_string($data['name']) or strlen($data['name']) > 50) throw new Exception('Invalid value for NAME');
            
             if (isset($data['amount'])) $amount = $data['amount'];
             if ( !is_int($amount) or $amount < 0) throw new Exception ("Invalid value of AMOUNT");
@@ -142,8 +142,27 @@ class ProductInStoreController extends AbstractController
         }
 
     //updating product in DB:
-        
 
+        $em = $this->getDoctrine()->getManager();
+        $queryBuilder = $em -> createQueryBuilder()
+                            -> update ('App\Entity\ProductInStore', 'p')
+
+                            -> set('p.name', ':name')
+                            -> setParameter ('name', $name)
+
+                            -> set('p.amount', ':amount')
+                            -> setParameter ('amount', $amount)
+
+                            -> where ('p.id = :id')
+                            -> setParameter ('id', $id)
+                            -> getQuery();
+                            
+        try {$result = $queryBuilder -> execute(); }               
+        catch (\Exception $e) {return new Response ("DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);}
+
+        if ($result) return new Response ("Success", Response::HTTP_OK);
+        else return new Response ("Item NOT FOUND", Response::HTTP_NOT_FOUND);
+        
         return new Response ("Success", Response::HTTP_OK);
     }
     
