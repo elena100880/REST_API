@@ -62,15 +62,15 @@ class ProductInStoreController extends AbstractFOSRestController
         }
         
         $returnResponse = ["data" => $productsPage, "total" => $totalElements];
-        $view = $this->view($returnResponse, 200);
-        return $view;
+        return $this->view($returnResponse, 200);
     }
 
     public function product_delete (ProductInStore $product)  
-    /** @todo how to catch DB error when fetching product from DB?? 
-     * @todo Customize 404 message
-    */
-    {   
+    { 
+         /** 
+         * @todo how to catch DB error when fetching product from DB?? return find() instead of Converter?
+         */ 
+        //if (empty($product)) return $this->view('NOT FOUND', 404);
         try{
             $em = $this->getDoctrine()->getManager();
             $em->remove($product);
@@ -82,8 +82,7 @@ class ProductInStoreController extends AbstractFOSRestController
                                 DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
         }
         
-        $view = $this->view('Delete Success', 200);
-        return $view;
+        return $this->view('Delete Success', 200);
     }
 
     public function product_add (Request $request)
@@ -126,13 +125,12 @@ class ProductInStoreController extends AbstractFOSRestController
             return new Response ("Developer info: $message<br><br> DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
         }
 
-        $view = $this->view('Add Success', 200);
-        return $view;
+        return $this->view('Add Success', 200);
     }
 
-    public function product_edit (ProductInStore $product)  
-    /** @todo how to catch DB error when fetching product from DB?? 
-     * @todo Customize 404 message
+    public function product_edit (ProductInStore $product = null)  
+    /** 
+     * @todo how to catch DB error when fetching product from DB?? return find() instead of Converter?
     */
     {
         /* required json data from Request body:
@@ -141,6 +139,7 @@ class ProductInStoreController extends AbstractFOSRestController
          *      "amount": 1,  
          * }
          */
+        if (empty($product)) return $this->view('NOT FOUND', 404);
 
         $json = file_get_contents('php://input');
 
@@ -174,8 +173,7 @@ class ProductInStoreController extends AbstractFOSRestController
             return new Response ("Developer info: $message<br><br> DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
         }
 
-        $view = $this->view('Update Success', 200);
-        return $view;
+        return $this->view('Update Success', 200);
     }
     
     private function valid_json($string)  { 
