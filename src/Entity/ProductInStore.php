@@ -59,3 +59,4 @@ class ProductInStore
         return $this;
     }
 }
+
