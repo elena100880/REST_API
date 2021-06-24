@@ -23,22 +23,22 @@ fos_rest:
     format_listener:
         enabled: true 
         rules:
-            - { path: ^/, methods: [GET], priorities: [ json ], fallback_format: html}
-            - { path: ^/, methods: [DELETE, POST, PATCH], priorities: [ xml ], fallback_format: html}
+            - { path: ^/, methods: [GET], priorities: [ json ]}
+            - { path: ^/, methods: [DELETE, POST, PATCH], priorities: [ xml ]}
 
     versioning: 
         enabled: true
 
     view:
         view_response_listener:  
-          enabled: false
+          enabled: true
           force: false
-        mime_types:
+        mime_types:  
           enabled: true
           formats:
             html: [text/html; charset=UTF-8']
             text: [text/plain; charset=UTF-8']
-            xml: [text/xml; charset=UTF-8'; text/plain; ]
+            xml: [text/xml; charset=UTF-8; text/plain ]
 
     service:
         view_handler: fos_rest.view_handler.default

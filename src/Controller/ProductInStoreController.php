@@ -16,10 +16,11 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 
 use FOS\RestBundle\Controller\AbstractFOSRestController;
+use FOS\RestBundle\View\View;
 
 class ProductInStoreController extends AbstractFOSRestController
 {    
-    public function product_list(Request $request): Response  
+    public function product_list(Request $request)
     {
        /* required data from Request:
         * amount - 0 (not in store), 1 - all products in store (default), 5 - products >5 in store
@@ -62,10 +63,13 @@ class ProductInStoreController extends AbstractFOSRestController
         $returnResponse = ["data" => $productsPage, "total" => $totalElements];
         
         $view = $this->view($returnResponse, 200);
-        return $this->handleView($view);
+        return $view;
     }
 
-    public function product_delete (Request $request, $id): Response
+    /**
+     * @View()
+     */
+    public function product_delete (Request $request, $id)
     {        
         $em = $this->getDoctrine()->getManager();
         $queryBuilder = $em -> createQueryBuilder()
@@ -83,10 +87,10 @@ class ProductInStoreController extends AbstractFOSRestController
         
         if ($result) $view = $this->view('Delete Success', 200);
         else $view = $this->view('Item NOT FOUND', 404);
-        return $this->handleView($view);
+        return $view;
     }
 
-    public function product_add (Request $request): Response
+    public function product_add (Request $request)
     {
         /* required json data from Request body:
          * {    
@@ -126,10 +130,10 @@ class ProductInStoreController extends AbstractFOSRestController
         }
 
         $view = $this->view('Add Success', 200);
-        return $this->handleView($view);
+        return $view;
     }
 
-    public function product_edit (Request $request, $id): Response
+    public function product_edit (Request $request, $id)
     {
         /* required json data from Request body:
          * {    
@@ -178,7 +182,7 @@ class ProductInStoreController extends AbstractFOSRestController
 
         if ($result) $view = $this->view('Update Success', 200);
         else $view = $this->view('Item NOT FOUND', 404);        
-        return $this->handleView($view);
+        return $view;
     }
     
     private function valid_json($string)  { 
