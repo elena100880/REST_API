@@ -21,7 +21,7 @@ class ProductInStoreController extends AbstractFOSRestController
 {    
     public function product_list(Request $request): Response  
     {
-       /* requirements:
+       /* required data from Request:
         * amount - 0 (not in store), 1 - all products in store (default), 5 - products >5 in store
         * page - from 1, default 1
         * elements - max 1000, default 2
@@ -62,7 +62,6 @@ class ProductInStoreController extends AbstractFOSRestController
         $returnResponse = ["data" => $productsPage, "total" => $totalElements];
         
         $view = $this->view($returnResponse, 200);
-        $view->setFormat('json');
         return $this->handleView($view);
     }
 
@@ -84,13 +83,12 @@ class ProductInStoreController extends AbstractFOSRestController
         
         if ($result) $view = $this->view('Delete Success', 200);
         else $view = $this->view('Item NOT FOUND', 404);
-        $view->setFormat('xml');
         return $this->handleView($view);
     }
 
     public function product_add (Request $request): Response
     {
-        /* required json data from Request:
+        /* required json data from Request body:
          * {    
          *      "name": "Product X", //
          *      "amount": 1,   // 0 for default
@@ -128,13 +126,12 @@ class ProductInStoreController extends AbstractFOSRestController
         }
 
         $view = $this->view('Add Success', 200);
-        $view->setFormat('xml');
         return $this->handleView($view);
     }
 
     public function product_edit (Request $request, $id): Response
     {
-        /* required json data from Request:
+        /* required json data from Request body:
          * {    
          *      "name": "Product X",  
          *      "amount": 1,  
@@ -181,7 +178,6 @@ class ProductInStoreController extends AbstractFOSRestController
 
         if ($result) $view = $this->view('Update Success', 200);
         else $view = $this->view('Item NOT FOUND', 404);        
-        $view->setFormat('xml');
         return $this->handleView($view);
     }
     
