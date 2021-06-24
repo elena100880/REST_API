@@ -194,7 +194,7 @@ class ProductInStoreController extends AbstractController
         catch (Exception) {
             throw new Exception ("Invalid value for ELEMENTS");
         }
-        if ($string > 1000 ) throw new Exception ("Invalid value for ELEMENTS");
+        if ($elements > 1000 ) throw new Exception ("Invalid value for ELEMENTS");
         return true;
     }
 
