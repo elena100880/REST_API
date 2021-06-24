@@ -15,7 +15,9 @@ use Doctrine\ORM\EntityManagerInterface;
 
 use Doctrine\ORM\Tools\Pagination\Paginator;
 
-class ProductInStoreController extends AbstractController
+use FOS\RestBundle\Controller\AbstractFOSRestController;
+
+class ProductInStoreController extends AbstractFOSRestController
 {    
     public function product_list(Request $request): Response  
     {
@@ -48,8 +50,8 @@ class ProductInStoreController extends AbstractController
         $DQLquery = $em->createQuery($dql)
                                     ->setFirstResult($page * $elements  - $elements)
                                     ->setMaxResults($elements);
-
-        try { /** @todo Another way of catching Error here??? */
+        try { 
+            //$productsPage = $DQLquery ->getResult();
             $productsPage = new Paginator($DQLquery);
             $totalElements = count($productsPage); 
         }
@@ -57,9 +59,11 @@ class ProductInStoreController extends AbstractController
             $message = $e->getMessage();
             return new Response ("Developer info: $message<br><br> DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
         }
-        
         $returnResponse = ["data" => $productsPage, "total" => $totalElements];
-        return $this->json($returnResponse);  
+        
+        $view = $this->view($returnResponse, 200);
+        $view->setFormat('json');
+        return $this->handleView($view);
     }
 
     public function product_delete (Request $request, $id): Response
@@ -71,14 +75,17 @@ class ProductInStoreController extends AbstractController
                             -> where ('p.id = :id')
                             -> getQuery();
         
-        try {$result = $queryBuilder -> execute(); }      /** @todo Another way of catching Error here??? */         
+        try {$result = $queryBuilder -> execute(); }               
         catch (\Exception $e) {
             $message = $e->getMessage();
-            return new Response ("Developer info: $message<br><br> DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
+            return new Response ("Developer info: $message.<br><br>
+                                DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
         }
-
-        if ($result) return new Response ("Success", Response::HTTP_OK);
-        else return new Response ("Item NOT FOUND", Response::HTTP_NOT_FOUND);
+        
+        if ($result) $view = $this->view('Delete Success', 200);
+        else $view = $this->view('Item NOT FOUND', 404);
+        $view->setFormat('xml');
+        return $this->handleView($view);
     }
 
     public function product_add (Request $request): Response
@@ -120,7 +127,9 @@ class ProductInStoreController extends AbstractController
             return new Response ("Developer info: $message<br><br> DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
         }
 
-        return new Response ("Success", Response::HTTP_OK);
+        $view = $this->view('Add Success', 200);
+        $view->setFormat('xml');
+        return $this->handleView($view);
     }
 
     public function product_edit (Request $request, $id): Response
@@ -170,10 +179,10 @@ class ProductInStoreController extends AbstractController
             return new Response ("Developer info: $message<br><br> DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
         }
 
-        if ($result) return new Response ("Success", Response::HTTP_OK);
-        else return new Response ("Item NOT FOUND", Response::HTTP_NOT_FOUND);
-        
-        return new Response ("Success", Response::HTTP_OK);
+        if ($result) $view = $this->view('Update Success', 200);
+        else $view = $this->view('Item NOT FOUND', 404);        
+        $view->setFormat('xml');
+        return $this->handleView($view);
     }
     
     private function valid_json($string)  { 
@@ -194,7 +203,7 @@ class ProductInStoreController extends AbstractController
         catch (Exception) {
             throw new Exception ("Invalid value for ELEMENTS");
         }
-        if ($string > 1000 ) throw new Exception ("Invalid value for ELEMENTS");
+        if ($elements > 1000 ) throw new Exception ("Invalid value for ELEMENTS");
         return true;
     }
 
