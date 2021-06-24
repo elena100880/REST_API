@@ -17,6 +17,7 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\View\View;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 
 class ProductInStoreController extends AbstractFOSRestController
 {    
@@ -47,46 +48,41 @@ class ProductInStoreController extends AbstractFOSRestController
         elseif ($amount == 5) $dql = $dql.' WHERE p.amount > 5';
         else return new Response ("Invalid amount", Response::HTTP_BAD_REQUEST);
         
-        $em = $this->getDoctrine()->getManager();
-        $DQLquery = $em->createQuery($dql)
+        try {
+            $em = $this->getDoctrine()->getManager();
+            $DQLquery = $em->createQuery($dql)
                                     ->setFirstResult($page * $elements  - $elements)
                                     ->setMaxResults($elements);
-        try { 
-            //$productsPage = $DQLquery ->getResult();
-            $productsPage = new Paginator($DQLquery);
+            $productsPage = new Paginator($DQLquery); //$productsPage = $DQLquery ->getResult();
             $totalElements = count($productsPage); 
         }
         catch (\Exception $e) {
             $message = $e->getMessage();
             return new Response ("Developer info: $message<br><br> DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
         }
-        $returnResponse = ["data" => $productsPage, "total" => $totalElements];
         
+        $returnResponse = ["data" => $productsPage, "total" => $totalElements];
         $view = $this->view($returnResponse, 200);
         return $view;
     }
 
-    /**
-     * @View()
-     */
-    public function product_delete (Request $request, $id)
-    {        
-        $em = $this->getDoctrine()->getManager();
-        $queryBuilder = $em -> createQueryBuilder()
-                            -> delete ('App\Entity\ProductInStore', 'p')
-                            -> setParameter ('id', $id)
-                            -> where ('p.id = :id')
-                            -> getQuery();
-        
-        try {$result = $queryBuilder -> execute(); }               
+    public function product_delete (ProductInStore $product)  
+    /** @todo how to catch DB error when fetching product from DB?? 
+     * @todo Customize 404 message
+    */
+    {   
+        try{
+            $em = $this->getDoctrine()->getManager();
+            $em->remove($product);
+            $em->flush();
+        }
         catch (\Exception $e) {
             $message = $e->getMessage();
             return new Response ("Developer info: $message.<br><br>
                                 DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
         }
         
-        if ($result) $view = $this->view('Delete Success', 200);
-        else $view = $this->view('Item NOT FOUND', 404);
+        $view = $this->view('Delete Success', 200);
         return $view;
     }
 
@@ -117,13 +113,14 @@ class ProductInStoreController extends AbstractFOSRestController
         
 
     //validating and adding product to DB:
-        $product = new ProductInStore;
-        $product->setName($name);
-        $product->setAmount($amount);
-        $em = $this->getDoctrine()->getManager();
-        $em -> persist($product);
-        
-        try {$em -> flush();} /** @todo Another way of catching Error here??? */
+        try {
+            $product = new ProductInStore;
+            $product->setName($name);
+            $product->setAmount($amount);
+            $em = $this->getDoctrine()->getManager();
+            $em -> persist($product);
+            $em -> flush();
+        }
         catch (\Exception $e) {
             $message = $e->getMessage();
             return new Response ("Developer info: $message<br><br> DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
@@ -133,7 +130,10 @@ class ProductInStoreController extends AbstractFOSRestController
         return $view;
     }
 
-    public function product_edit (Request $request, $id)
+    public function product_edit (ProductInStore $product)  
+    /** @todo how to catch DB error when fetching product from DB?? 
+     * @todo Customize 404 message
+    */
     {
         /* required json data from Request body:
          * {    
@@ -147,7 +147,8 @@ class ProductInStoreController extends AbstractFOSRestController
     //validating parameters:
         try 
         {
-            $data = ($this->valid_json($json)) ? json_decode($json, true) : throw new Exception('Invalid json');
+            $this->valid_json($json);
+            $data = json_decode($json, true);
 
             if (isset($data['name'])) $name = trim($data['name']);
             $this->is_name_valid ($name);
@@ -160,28 +161,20 @@ class ProductInStoreController extends AbstractFOSRestController
         }
 
     //updating product in DB:
-        $em = $this->getDoctrine()->getManager();
-        $queryBuilder = $em -> createQueryBuilder()
-                            -> update ('App\Entity\ProductInStore', 'p')
+        $product->setName($name);
+        $product->setAmount($amount);
 
-                            -> set('p.name', ':name')
-                            -> setParameter ('name', $name)
-
-                            -> set('p.amount', ':amount')
-                            -> setParameter ('amount', $amount)
-
-                            -> where ('p.id = :id')
-                            -> setParameter ('id', $id)
-                            -> getQuery();
-                            
-        try {$result = $queryBuilder -> execute();}     /** @todo Another way of catching Error here??? */          
+        try {
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager  -> persist($product);
+            $entityManager ->flush();
+        }
         catch (\Exception $e) {
             $message = $e->getMessage();
             return new Response ("Developer info: $message<br><br> DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
         }
 
-        if ($result) $view = $this->view('Update Success', 200);
-        else $view = $this->view('Item NOT FOUND', 404);        
+        $view = $this->view('Update Success', 200);
         return $view;
     }
     
