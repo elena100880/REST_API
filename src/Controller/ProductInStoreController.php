@@ -34,10 +34,18 @@ class ProductInStoreController extends AbstractFOSRestController
         /* required data from Request:
         * amount - 0 (not in store), 1 - all products in store (default), 5 - products >5 in store
         * page - from 1, default 1
-        * elements - max 1000, default 2
+        * elements - max 1000, default 2;
+        *
+        *  or just id in URL (for getting one product by id)
         */
 
         try {
+            if ($id != 0) {
+                $product = $this->getDoctrine()->getRepository(ProductInStore::class)->find($id);
+                if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 400);
+
+                return $this->view($product, 200);
+            }
     //validating data from Request:
             $amount = $request->query->get('amount') ?? 1;
                 

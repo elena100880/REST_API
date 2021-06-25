@@ -28,9 +28,6 @@ fos_rest:
         enabled: true 
         rules:
             - { path: ^/, methods: [GET, DELETE, POST, PATCH], priorities: [ json, html]}
-           
-
-
     view:
         view_response_listener:  
           enabled: true
