@@ -5,7 +5,7 @@ sensio_framework_extra:
         annotations: true
     request:
         converters: true
-        auto_convert: true
+        auto_convert: false
     cache:
         annotations: true
     security:

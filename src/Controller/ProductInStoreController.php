@@ -85,8 +85,7 @@ class ProductInStoreController extends AbstractFOSRestController
         return $this->view('Delete Success', 200);
     }
    
-    #[ParamConverter('product', converter: 'fos_rest.request_body')]
-    public function product_add (ProductInStore $product)
+    public function product_add ()
     {
         /* required json data from Request body:
          * {     "name": "Product X", //
@@ -104,13 +103,16 @@ class ProductInStoreController extends AbstractFOSRestController
             $name = trim($data['name']) ?? null;
             $this->is_name_valid ($name);
             
-            $amount = $data['amount'] ?? 0;
+            $amount = $data['amount'] ?? 0; 
             $this->is_amount_valid ($amount);
         }
         catch (\Exception $e) {return new Response ($e->getMessage(), Response::HTTP_BAD_REQUEST); }
     
     //adding product to DB:
         try {
+            $product = new ProductInStore;
+            $product ->setName($name);
+            $product->setAmount($amount);
             $em = $this->getDoctrine()->getManager();
             $em -> persist($product);
             $em -> flush();
