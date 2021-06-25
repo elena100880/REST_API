@@ -18,71 +18,79 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\View\View;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+
+use FOS\RestBundle\Request\ParamFetcher;
+use FOS\RestBundle\Controller\Annotations\RequestParam;
+use FOS\RestBundle\Controller\Annotations\QueryParam;
+use FOS\RestBundle\Controller\Annotations\FileParam;
+use Symfony\Component\Validator\Constraints;
+use Acme\FooBundle\Validation\Constraints\MyComplexConstraint;
 
 class ProductInStoreController extends AbstractFOSRestController
 {    
-    public function product_list(Request $request)
+    public function product_list(Request $request, $id)
     {
-       /* required data from Request:
+        /* required data from Request:
         * amount - 0 (not in store), 1 - all products in store (default), 5 - products >5 in store
         * page - from 1, default 1
         * elements - max 1000, default 2
         */
-            
+
+        try {
     //validating data from Request:
-        try {            
             $amount = $request->query->get('amount') ?? 1;
-            
+                
             $page = ($request->query->get('page')) ?? 1;
             $this->if_string_is_natural_number($page);
-            
+                
             $elements = $request->query->get('elements') ?? 2;
             $this->is_elements_valid($elements);
-        }
-        catch (Exception $e) {return new Response ($e->getMessage(), Response::HTTP_BAD_REQUEST);}
-        
+                  
     //quering products:    
-        $dql = "SELECT p FROM App\Entity\ProductInStore p";
-        if ($amount == 1);
-        elseif ($amount == 0) $dql = $dql.' WHERE p.amount = 0';
-        elseif ($amount == 5) $dql = $dql.' WHERE p.amount > 5';
-        else return new Response ("Invalid amount", Response::HTTP_BAD_REQUEST);
+            $dql = "SELECT p FROM App\Entity\ProductInStore p";
+            if ($amount == 1) $dql = $dql;
+            elseif ($amount == 0) $dql = $dql.' WHERE p.amount = 0';
+            elseif ($amount == 5) $dql = $dql.' WHERE p.amount > 5';
+            else return $this->view (["code" => 400, "message" =>"Invalid amount"], 400);
         
-        try {
+        
             $em = $this->getDoctrine()->getManager();
             $DQLquery = $em->createQuery($dql)
                                     ->setFirstResult($page * $elements  - $elements)
                                     ->setMaxResults($elements);
             $productsPage = new Paginator($DQLquery); //$productsPage = $DQLquery ->getResult();
-            $totalElements = count($productsPage); 
+            $totalElements = count($productsPage);
+            $returnResponse = ["data" => $productsPage, "total" => $totalElements];
+
+            return $this->view($returnResponse, 200);
         }
-        catch (\Exception $e) {
-            $message = $e->getMessage();
-            return new Response ("Developer info: $message<br><br> DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
+        catch (Exception $e) {
+            $g = $e->getCode();
+            return $this->view(["code" => 400, "message" => $e->getMessage()], 400);
         }
-        
-        $returnResponse = ["data" => $productsPage, "total" => $totalElements];
-        return $this->view($returnResponse, 200);
+        catch (\Throwable $e) {
+            $message = $e->getMessage(); //dev info
+            return $this->view(["code" => 503, "message" => "Service is not available"], 503);
+        }
     }
 
-    public function product_delete (ProductInStore $product = null)  
+    public function product_delete ($id)  
     { 
-        /** 
-        * @todo how to catch DB error when fetching product from DB?? return find() instead of Converter?
-        */ 
-        if (empty($product)) return $this->view('NOT FOUND', 404);
         try{
             $em = $this->getDoctrine()->getManager();
+            $product = $em->getRepository(ProductInStore::class)->find($id);
+            if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 400);
+
             $em->remove($product);
             $em->flush();
+
+            return $this->view('Delete Success', 200);
         }
-        catch (\Exception $e) {
-            $message = $e->getMessage();
-            return new Response ("Developer info: $message.<br><br>
-                                DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
+        catch (\Throwable $e) {
+            $message = $e->getMessage(); //dev info
+            return $this->view(["code" => 503, "message" => "Service is not available"], 503);
         }
-        
-        return $this->view('Delete Success', 200);
     }
    
     public function product_add ()
@@ -92,44 +100,41 @@ class ProductInStoreController extends AbstractFOSRestController
          *      "amount": 1,   // 0 for default
          * }
          */
-        $json = file_get_contents('php://input');
 
+        try {    
+            $json = file_get_contents('php://input');
+        
     //validating data from Request:
-        try 
-        {
             $this->valid_json($json);
             $data = json_decode($json, true);
 
             $name = trim($data['name']) ?? null;
-            $this->is_name_valid ($name);
-            
+            $this->is_name_valid ($data['name']);
+                
             $amount = $data['amount'] ?? 0; 
             $this->is_amount_valid ($amount);
-        }
-        catch (\Exception $e) {return new Response ($e->getMessage(), Response::HTTP_BAD_REQUEST); }
-    
+                  
     //adding product to DB:
-        try {
             $product = new ProductInStore;
-            $product ->setName($name);
+            $product->setName($name);
             $product->setAmount($amount);
             $em = $this->getDoctrine()->getManager();
             $em -> persist($product);
             $em -> flush();
-        }
-        catch (\Exception $e) {
-            $message = $e->getMessage();
-            return new Response ("Developer info: $message<br><br> DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
-        }
 
-        return $this->view('Add Success', 200);
+            return $this->view('Add Success', 200);
+        }
+        catch (Exception $e) {
+            $g = $e->getCode();
+            return $this->view(["code" => 400, "message" => $e->getMessage()], 400);
+        }
+        catch (\Throwable $e) {
+            $message = $e->getMessage(); //dev info
+            return $this->view(["code" => 503, "message" => "Service is not available"], 503);
+        }
     }
 
-    #[ParamConverter('product')]
-    public function product_edit (ProductInStore $product = null)  
-    /** 
-     * @todo how to catch DB error when fetching product from DB?? return explicit find() instead of Converter?
-    */
+    public function product_edit ($id)  
     {
         /* required json data from Request body:
          * {    "name": "Product X",  
@@ -137,41 +142,44 @@ class ProductInStoreController extends AbstractFOSRestController
          * }
          */
         
-        if (empty($product)) return $this->view('NOT FOUND', 404);
-
-        $json = file_get_contents('php://input');
-
-    //validating parameters:
-        try 
-        {
+        try {    
+            $json = file_get_contents('php://input');
+        
+    //validating data from Request:
+            $em = $this->getDoctrine()->getManager();
+            $product = $em->getRepository(ProductInStore::class)->find($id);
+            if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 400);
+        
             $this->valid_json($json);
             $data = json_decode($json, true);
-
-            if (isset($data['name'])) $name = trim($data['name']);
-            $this->is_name_valid ($name);
-           
-            if (isset($data['amount'])) $amount = $data['amount'];
-            $this->is_amount_valid ($amount);
-        }
-        catch (Exception $e) {
-            return new Response ($e->getMessage(), Response::HTTP_BAD_REQUEST);
-        }
-
+            
+            if (isset($data['name'])) {
+                $name = trim($data['name']);
+                $this->is_name_valid ($data['name']);
+                $product->setName($name);
+            }
+            
+            if (isset($data['amount'])) {
+                $amount = $data['amount'];
+                $this->is_amount_valid ($amount);
+                $product->setAmount($amount);
+            }
+      
     //updating product in DB:
-        $product->setName($name);
-        $product->setAmount($amount);
-
-        try {
             $entityManager = $this->getDoctrine()->getManager();
             $entityManager -> persist($product);
             $entityManager ->flush();
-        }
-        catch (\Exception $e) {
-            $message = $e->getMessage();
-            return new Response ("Developer info: $message<br><br> DB is not available", Response::HTTP_SERVICE_UNAVAILABLE);
-        }
 
-        return $this->view('Update Success', 200);
+            return $this->view('Update Success', 200);
+        }
+        catch (Exception $e) {
+            $g = $e->getCode();
+            return $this->view(["code" => 400, "message" => $e->getMessage()], 400);
+        }
+        catch (\Throwable $e) {
+            $message = $e->getMessage(); //dev info
+            return $this->view(["code" => 503, "message" => "Service is not available"], 503);
+        }
     }
     
     private function valid_json($string)  { 
@@ -186,13 +194,7 @@ class ProductInStoreController extends AbstractFOSRestController
     }
 
     private function is_elements_valid ($elements) {
-        try {
-            $this->if_string_is_natural_number($elements);
-        }
-        catch (Exception) {
-            throw new Exception ("Invalid value for ELEMENTS");
-        }
-        if ($elements > 1000 ) throw new Exception ("Invalid value for ELEMENTS");
+        if (!is_numeric($elements) or ($elements - floor($elements) != 0) or $elements <= 0 or $elements > 1000 ) throw new Exception ("Invalid value for ELEMENTS");
         return true;
     }
 
@@ -203,7 +205,7 @@ class ProductInStoreController extends AbstractFOSRestController
     }
 
     private function is_amount_valid ($amount) {
-    if ( !is_int($amount) or $amount < 0) throw new Exception ("Invalid value of AMOUNT");
-    return true;
-    }  
+        if ( !is_int($amount) or $amount < 0) throw new Exception ("Invalid value of AMOUNT");
+        return true;
+    }
 }

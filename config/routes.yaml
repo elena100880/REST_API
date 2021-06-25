@@ -1,5 +1,6 @@
 product_list:
-    path: /products
+    path: /products/{id}
+    defaults: {id: 0}
     controller: App\Controller\ProductInStoreController::product_list
     methods: GET
 

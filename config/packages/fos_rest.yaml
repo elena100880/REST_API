@@ -5,10 +5,12 @@ fos_rest:
 
     exception:
         enabled: true
-#        codes:
-#            App\Exception\MyException: 403
-#        messages:
-#            App\Exception\MyException: Forbidden area.
+        map_exception_codes: true
+        exception_listener: false
+        codes:
+            #  Symfony\Component\HttpKernel\Exception\HttpException: 400
+        messages:
+            #  Symfony\Component\HttpKernel\Exception\HttpException: true
     
     param_fetcher_listener:
         enabled: true 
@@ -19,14 +21,14 @@ fos_rest:
 #    body_listener:
 #        enabled: true
 
-#    body_converter:
-#        enabled: false
+    body_converter:
+        enabled: true
         
     format_listener:
         enabled: true 
         rules:
-            - { path: ^/, methods: [GET], priorities: [ json], fallback_format: json}
-            - { path: ^/, methods: [DELETE, POST, PATCH], priorities: [ xml ], fallback_format: json}
+            - { path: ^/, methods: [GET, DELETE, POST, PATCH], priorities: [ json, html]}
+           
 
 
     view:
@@ -34,11 +36,11 @@ fos_rest:
           enabled: true
           force: false
         mime_types:
-          enabled: true
-          formats:
-            html: [text/html; charset=UTF-8']
-            text: [text/plain; charset=UTF-8']
-            xml: [text/xml; charset=UTF-8'; text/plain; ]
+          enabled: false
+        #  formats:
+        #    html: [text/html; charset=UTF-8']
+        #    text: [text/plain; charset=UTF-8']
+        #    xml: [text/xml; charset=UTF-8']
 
     service:
         view_handler: fos_rest.view_handler.default
