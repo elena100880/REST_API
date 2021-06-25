@@ -1,7 +1,6 @@
 # Read the documentation: https://symfony.com/doc/master/bundles/FOSRestBundle/index.html
 fos_rest: 
 
-#    
 #    routing_loader: true
 
     exception:
@@ -20,11 +19,14 @@ fos_rest:
     body_listener:
         enabled: true
 
+    body_converter:
+        enabled: true
+        
     format_listener:
         enabled: true 
         rules:
-            - { path: ^/, methods: [GET], priorities: [ json ]}
-            - { path: ^/, methods: [DELETE, POST, PATCH], priorities: [ xml ]}
+            - { path: ^/, methods: [GET], priorities: [ json ], fallback_format: json}
+            - { path: ^/, methods: [DELETE, POST, PATCH], priorities: [ xml ], fallback_format: json}
 
     versioning: 
         enabled: true

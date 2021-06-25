@@ -29,7 +29,7 @@ class ProductInStoreController extends AbstractFOSRestController
         * elements - max 1000, default 2
         */
             
-    //validating parameters:
+    //validating data from Request:
         try {            
             $amount = $request->query->get('amount') ?? 1;
             
@@ -65,12 +65,12 @@ class ProductInStoreController extends AbstractFOSRestController
         return $this->view($returnResponse, 200);
     }
 
-    public function product_delete (ProductInStore $product)  
+    public function product_delete (ProductInStore $product = null)  
     { 
-         /** 
-         * @todo how to catch DB error when fetching product from DB?? return find() instead of Converter?
-         */ 
-        //if (empty($product)) return $this->view('NOT FOUND', 404);
+        /** 
+        * @todo how to catch DB error when fetching product from DB?? return find() instead of Converter?
+        */ 
+        if (empty($product)) return $this->view('NOT FOUND', 404);
         try{
             $em = $this->getDoctrine()->getManager();
             $em->remove($product);
@@ -84,19 +84,18 @@ class ProductInStoreController extends AbstractFOSRestController
         
         return $this->view('Delete Success', 200);
     }
-
-    public function product_add (Request $request)
+   
+    #[ParamConverter('product', converter: 'fos_rest.request_body')]
+    public function product_add (ProductInStore $product)
     {
         /* required json data from Request body:
-         * {    
-         *      "name": "Product X", //
+         * {     "name": "Product X", //
          *      "amount": 1,   // 0 for default
          * }
          */
-
         $json = file_get_contents('php://input');
 
-    //validating parameters:
+    //validating data from Request:
         try 
         {
             $this->valid_json($json);
@@ -109,13 +108,9 @@ class ProductInStoreController extends AbstractFOSRestController
             $this->is_amount_valid ($amount);
         }
         catch (\Exception $e) {return new Response ($e->getMessage(), Response::HTTP_BAD_REQUEST); }
-        
-
-    //validating and adding product to DB:
+    
+    //adding product to DB:
         try {
-            $product = new ProductInStore;
-            $product->setName($name);
-            $product->setAmount($amount);
             $em = $this->getDoctrine()->getManager();
             $em -> persist($product);
             $em -> flush();
@@ -128,17 +123,18 @@ class ProductInStoreController extends AbstractFOSRestController
         return $this->view('Add Success', 200);
     }
 
+    #[ParamConverter('product')]
     public function product_edit (ProductInStore $product = null)  
     /** 
-     * @todo how to catch DB error when fetching product from DB?? return find() instead of Converter?
+     * @todo how to catch DB error when fetching product from DB?? return explicit find() instead of Converter?
     */
     {
         /* required json data from Request body:
-         * {    
-         *      "name": "Product X",  
+         * {    "name": "Product X",  
          *      "amount": 1,  
          * }
          */
+        
         if (empty($product)) return $this->view('NOT FOUND', 404);
 
         $json = file_get_contents('php://input');
@@ -165,7 +161,7 @@ class ProductInStoreController extends AbstractFOSRestController
 
         try {
             $entityManager = $this->getDoctrine()->getManager();
-            $entityManager  -> persist($product);
+            $entityManager -> persist($product);
             $entityManager ->flush();
         }
         catch (\Exception $e) {
