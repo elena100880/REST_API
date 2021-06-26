@@ -22,23 +22,29 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ProductInStoreController extends AbstractFOSRestController
 {    
-    public function products_get(Request $request)
+    public function products_get(Request $request, ProductInStore $product = null, $id)
     {
         /* required data from Request:
         * amount - 0 (not in store), 1 - all products in store (default), 5 - products >5 in store
         * page - from 1, default 1
         * elements - max 1000, default 2;
         *
-        *  or just id=1  (for getting one product by id)
+        *  or just /id  (for getting one product by id, orher parameters are ignored)
         */
 
         try {
-            $id = $request->query->get('id');
+
+        /*    $id = $request->query->get('id');
             if ( isset($id)) {
                     $product = $this->getDoctrine()->getRepository(ProductInStore::class)->find($id);
                     if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 404);
                     return $this->view($product, 200);
-                }
+                }   */
+
+            if ($id != 0) {
+                if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 404);
+                return $this->view($product, 200);
+            }
             
     //validating data from Request:
             $amount = $request->query->get('amount') ?? 1;
@@ -72,14 +78,14 @@ class ProductInStoreController extends AbstractFOSRestController
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later."], 500);
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "dev_info" => $message], 500);
         }
     }
 
-    public function product_delete (ProductInStore $product) // = null) 
+    public function product_delete (ProductInStore $product = null) 
     { 
         try{
-           // if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 400);
+            if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 400);
 
             $em = $this->getDoctrine()->getManager();
             $em->remove($product);
@@ -88,7 +94,7 @@ class ProductInStoreController extends AbstractFOSRestController
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later."], 500);
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "dev_info" => $message], 500);
         }
     }
    
@@ -129,7 +135,7 @@ class ProductInStoreController extends AbstractFOSRestController
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later."], 500);
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "dev_info" => $message], 500);
         }
     }
 
@@ -174,7 +180,7 @@ class ProductInStoreController extends AbstractFOSRestController
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later."], 500);
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "dev_info" => $message], 500);
         }
     }
     
