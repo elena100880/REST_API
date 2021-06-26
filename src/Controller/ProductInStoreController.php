@@ -20,16 +20,9 @@ use FOS\RestBundle\View\View;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-use FOS\RestBundle\Request\ParamFetcher;
-use FOS\RestBundle\Controller\Annotations\RequestParam;
-use FOS\RestBundle\Controller\Annotations\QueryParam;
-use FOS\RestBundle\Controller\Annotations\FileParam;
-use Symfony\Component\Validator\Constraints;
-use Acme\FooBundle\Validation\Constraints\MyComplexConstraint;
-
 class ProductInStoreController extends AbstractFOSRestController
 {    
-    public function product_list(Request $request, $id)
+    public function products_get(Request $request)
     {
         /* required data from Request:
         * amount - 0 (not in store), 1 - all products in store (default), 5 - products >5 in store
@@ -42,7 +35,7 @@ class ProductInStoreController extends AbstractFOSRestController
         try {
             if ($id != 0) {
                 $product = $this->getDoctrine()->getRepository(ProductInStore::class)->find($id);
-                if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 400);
+                if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 404);
 
                 return $this->view($product, 200);
             }
@@ -74,30 +67,27 @@ class ProductInStoreController extends AbstractFOSRestController
             return $this->view($returnResponse, 200);
         }
         catch (Exception $e) {
-            $g = $e->getCode();
             return $this->view(["code" => 400, "message" => $e->getMessage()], 400);
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 503, "message" => "Service is not available"], 503);
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later."], 500);
         }
     }
 
-    public function product_delete ($id)  
+    public function product_delete (ProductInStore $product) // = null) 
     { 
         try{
-            $em = $this->getDoctrine()->getManager();
-            $product = $em->getRepository(ProductInStore::class)->find($id);
-            if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 400);
+           // if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 400);
 
+            $em = $this->getDoctrine()->getManager();
             $em->remove($product);
             $em->flush();
-
             return $this->view('Delete Success', 200);
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 503, "message" => "Service is not available"], 503);
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later."], 500);
         }
     }
    
@@ -138,11 +128,11 @@ class ProductInStoreController extends AbstractFOSRestController
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 503, "message" => "Service is not available"], 503);
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later."], 500);
         }
     }
 
-    public function product_edit ($id)  
+    public function product_edit (ProductInStore $product = null) 
     {
         /* required json data from Request body:
          * {    "name": "Product X",  
@@ -150,14 +140,11 @@ class ProductInStoreController extends AbstractFOSRestController
          * }
          */
         
-        try {    
+        try { 
+            if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 400);  
             $json = file_get_contents('php://input');
         
     //validating data from Request:
-            $em = $this->getDoctrine()->getManager();
-            $product = $em->getRepository(ProductInStore::class)->find($id);
-            if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 400);
-        
             $this->valid_json($json);
             $data = json_decode($json, true);
             
@@ -174,9 +161,9 @@ class ProductInStoreController extends AbstractFOSRestController
             }
       
     //updating product in DB:
-            $entityManager = $this->getDoctrine()->getManager();
-            $entityManager -> persist($product);
-            $entityManager ->flush();
+            $em = $this->getDoctrine()->getManager();
+            $em -> persist($product);
+            $em->flush();
 
             return $this->view('Update Success', 200);
         }
@@ -186,7 +173,7 @@ class ProductInStoreController extends AbstractFOSRestController
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 503, "message" => "Service is not available"], 503);
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later."], 500);
         }
     }
     

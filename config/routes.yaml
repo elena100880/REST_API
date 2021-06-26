@@ -1,7 +1,7 @@
-product_list:
+products_get:
     path: /products/{id}
     defaults: {id: 0}
-    controller: App\Controller\ProductInStoreController::product_list
+    controller: App\Controller\ProductInStoreController::products_get
     methods: GET
 
 product_delete:

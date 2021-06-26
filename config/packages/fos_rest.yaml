@@ -15,8 +15,8 @@ fos_rest:
     param_fetcher_listener:
         enabled: true 
 
-    allowed_methods_listener:
-        enabled: true
+  #  allowed_methods_listener:
+  #      enabled: true
 
 #    body_listener:
 #        enabled: true
@@ -34,10 +34,10 @@ fos_rest:
           force: false
         mime_types:
           enabled: false
-        #  formats:
-        #    html: [text/html; charset=UTF-8']
-        #    text: [text/plain; charset=UTF-8']
-        #    xml: [text/xml; charset=UTF-8']
+          formats:
+            html: [text/html; charset=UTF-8']
+            text: [text/plain; charset=UTF-8']
+            xml: [text/xml; charset=UTF-8']
 
     service:
         view_handler: fos_rest.view_handler.default
