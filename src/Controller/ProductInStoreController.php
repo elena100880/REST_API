@@ -34,16 +34,9 @@ class ProductInStoreController extends AbstractFOSRestController
 
         try {
 
-        /*    $id = $request->query->get('id');
-            if ( isset($id)) {
-                    $product = $this->getDoctrine()->getRepository(ProductInStore::class)->find($id);
-                    if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 404);
-                    return $this->view($product, 200);
-                }   */
-
             if ($id != 0) {
                 if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 404);
-                return $this->view($product, 200);
+                return $this->view(['code' => 200, 'message' => 'Product is found', "data" => $product] , 200);
             }
             
     //validating data from Request:
@@ -52,7 +45,7 @@ class ProductInStoreController extends AbstractFOSRestController
             $page = ($request->query->get('page')) ?? 1;
             $this->if_string_is_natural_number($page);
                 
-            $elements = $request->query->get('elements') ?? 2;
+            $elements = $request->query->get('elements') ?? 20;
             $this->is_elements_valid($elements);
                   
     //quering products:    
@@ -69,9 +62,8 @@ class ProductInStoreController extends AbstractFOSRestController
                                     ->setMaxResults($elements);
             $productsPage = new Paginator($DQLquery); //$productsPage = $DQLquery ->getResult();
             $totalElements = count($productsPage);
-            $returnResponse = ["data" => $productsPage, "total" => $totalElements];
-
-            return $this->view($returnResponse, 200);
+            
+            return $this->view(['code' => 200, 'message' => 'Search success', "data" => $productsPage, "total" => $totalElements], 200);
         }
         catch (Exception $e) {
             return $this->view(["code" => 400, "message" => $e->getMessage()], 400);
@@ -90,7 +82,7 @@ class ProductInStoreController extends AbstractFOSRestController
             $em = $this->getDoctrine()->getManager();
             $em->remove($product);
             $em->flush();
-            return $this->view('Delete Success', 200);
+            return $this->view(['code' => 200, 'message' => 'Delete Success'], 200);
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
@@ -127,7 +119,7 @@ class ProductInStoreController extends AbstractFOSRestController
             $em -> persist($product);
             $em -> flush();
 
-            return $this->view('Add Success', 200);
+            return $this->view(["code" => 200, "message" => 'Add Success'], 200);
         }
         catch (Exception $e) {
             $g = $e->getCode();
@@ -172,7 +164,7 @@ class ProductInStoreController extends AbstractFOSRestController
             $em -> persist($product);
             $em->flush();
 
-            return $this->view('Update Success', 200);
+            return $this->view(['code' => 200, 'message' => 'Update Success'], 200);
         }
         catch (Exception $e) {
             $g = $e->getCode();
