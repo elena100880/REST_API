@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  api:
+    container_name: yy
+    image: php:8.0-apache
+    volumes:
+      - ./REST_API/:/var/www/
+    tty: true
+    stdin_open: true
+    
+  client: 
+    container_name: oo
+    image: php:8.0-apache
+    ports:
+      - 80:80
+    volumes:
+      - ./UI_for_REST_API/:/var/www/
+    tty: true
+    stdin_open: true

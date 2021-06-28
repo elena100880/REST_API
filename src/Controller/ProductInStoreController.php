@@ -49,7 +49,7 @@ class ProductInStoreController extends AbstractFOSRestController
             $this->is_elements_valid($elements);
                   
     //quering products:    
-            $dql1 = "SELECT p FROM App\Entity\ProductInStore p";
+            $dql = "SELECT p FROM App\Entity\ProductInStore p";
             if ($amount == 1) $dql = $dql;
             elseif ($amount == 0) $dql = $dql.' WHERE p.amount = 0';
             elseif ($amount == 5) $dql = $dql.' WHERE p.amount > 5';
@@ -170,7 +170,7 @@ class ProductInStoreController extends AbstractFOSRestController
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devI nfo" => $message], 500); //devInfo - only for dev mode
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $message], 500); //devInfo - only for dev mode
         }
     }
     
