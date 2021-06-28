@@ -49,13 +49,12 @@ class ProductInStoreController extends AbstractFOSRestController
             $this->is_elements_valid($elements);
                   
     //quering products:    
-            $dql = "SELECT p FROM App\Entity\ProductInStore p";
+            $dql1 = "SELECT p FROM App\Entity\ProductInStore p";
             if ($amount == 1) $dql = $dql;
             elseif ($amount == 0) $dql = $dql.' WHERE p.amount = 0';
             elseif ($amount == 5) $dql = $dql.' WHERE p.amount > 5';
             else return $this->view (["code" => 400, "message" =>"Invalid amount"], 400);
-        
-        
+                
             $em = $this->getDoctrine()->getManager();
             $DQLquery = $em->createQuery($dql)
                                     ->setFirstResult($page * $elements  - $elements)
@@ -70,14 +69,14 @@ class ProductInStoreController extends AbstractFOSRestController
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "dev_info" => $message], 500);
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $message], 500);  //devInfo - only for dev mode
         }
     }
 
     public function product_delete (ProductInStore $product = null) 
     { 
         try{
-            if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 400);
+            if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 404);
 
             $em = $this->getDoctrine()->getManager();
             $em->remove($product);
@@ -86,7 +85,7 @@ class ProductInStoreController extends AbstractFOSRestController
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "dev_info" => $message], 500);
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $message], 500);  //devInfo - only for dev mode
         }
     }
    
@@ -127,7 +126,7 @@ class ProductInStoreController extends AbstractFOSRestController
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "dev_info" => $message], 500);
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $message], 500);  //devInfo - only for dev mode
         }
     }
 
@@ -140,7 +139,7 @@ class ProductInStoreController extends AbstractFOSRestController
          */
         
         try { 
-            if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 400);  
+            if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 404);  
             $json = file_get_contents('php://input');
         
     //validating data from Request:
@@ -152,7 +151,6 @@ class ProductInStoreController extends AbstractFOSRestController
                 $this->is_name_valid ($data['name']);
                 $product->setName($name);
             }
-            
             if (isset($data['amount'])) {
                 $amount = $data['amount'];
                 $this->is_amount_valid ($amount);
@@ -172,7 +170,7 @@ class ProductInStoreController extends AbstractFOSRestController
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "dev_info" => $message], 500);
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devI nfo" => $message], 500); //devInfo - only for dev mode
         }
     }
     
