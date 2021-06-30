@@ -27,7 +27,7 @@ class ProductInStoreController extends AbstractFOSRestController
         /* required data from Request:
         * amount - 0 (not in store), 1 - all products in store (default), 5 - products >5 in store
         * page - from 1, default 1
-        * elements - max 1000, default 2;
+        * elements - max 1000, default 20;
         *
         *  or just /id  (for getting one product by id, orher parameters are ignored)
         */
