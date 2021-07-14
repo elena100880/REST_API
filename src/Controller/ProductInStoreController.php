@@ -40,15 +40,15 @@ class ProductInStoreController extends AbstractFOSRestController
             }
             
     //validating data from Request:
-            $amount = $request->query->get('amount') ?? 1;
-                
+                           
             $page = ($request->query->get('page')) ?? 1;
             $this->if_string_is_natural_number($page);
                 
             $elements = $request->query->get('elements') ?? 20;
             $this->is_elements_valid($elements);
                   
-    //quering products:    
+    //quering products:  
+            $amount = $request->query->get('amount') ?? 1;
             $dql = "SELECT p FROM App\Entity\ProductInStore p";
             if ($amount == 1) $dql = $dql;
             elseif ($amount == 0) $dql = $dql.' WHERE p.amount = 0';
@@ -196,8 +196,8 @@ class ProductInStoreController extends AbstractFOSRestController
         return true;
     }
 
-    private function is_amount_valid ($amount) {
+/*    private function is_amount_valid ($amount) {
         if ( !is_int($amount) or $amount < 0) throw new Exception ("Invalid value of AMOUNT");
         return true;
-    }
+    }   */
 }
