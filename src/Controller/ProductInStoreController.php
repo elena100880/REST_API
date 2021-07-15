@@ -17,12 +17,12 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\View\View;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter; 
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ProductInStoreController extends AbstractFOSRestController
 {    
-    public function products_get(Request $request, ProductInStore $product = null, $id)
+    public function products_get(Request $request, ProductInStore $product = null, $id) : View
     {
         /* required data from Request:
         * amount - 0 (not in store), 1 - all products in store (default), 5 - products >5 in store
@@ -35,12 +35,13 @@ class ProductInStoreController extends AbstractFOSRestController
         try {
 
             if ($id != 0) {
-                if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 404);
+                if (empty($product)) {
+                    return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 404);
+                }
                 return $this->view(['code' => 200, 'message' => 'Product is found', "data" => $product] , 200);
             }
             
     //validating data from Request:
-                           
             $page = ($request->query->get('page')) ?? 1;
             $this->if_string_is_natural_number($page);
                 
@@ -50,10 +51,18 @@ class ProductInStoreController extends AbstractFOSRestController
     //quering products:  
             $amount = $request->query->get('amount') ?? 1;
             $dql = "SELECT p FROM App\Entity\ProductInStore p";
-            if ($amount == 1) $dql = $dql;
-            elseif ($amount == 0) $dql = $dql.' WHERE p.amount = 0';
-            elseif ($amount == 5) $dql = $dql.' WHERE p.amount > 5';
-            else return $this->view (["code" => 400, "message" =>"Invalid amount"], 400);
+            if ($amount == 1) {
+                $dql = $dql;
+            }
+            elseif ($amount == 0) {
+                $dql = $dql.' WHERE p.amount = 0';
+            }
+            elseif ($amount == 5) {
+                $dql = $dql.' WHERE p.amount > 5';
+            }
+            else {
+                return $this->view (["code" => 400, "message" =>"Invalid amount"], 400);
+            }
                 
             $em = $this->getDoctrine()->getManager();
             $DQLquery = $em->createQuery($dql)
@@ -73,9 +82,9 @@ class ProductInStoreController extends AbstractFOSRestController
         }
     }
 
-    public function product_delete (ProductInStore $product = null) 
+    public function product_delete (ProductInStore $product = null)   : View
     { 
-        try{
+        try {
             if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 404);
 
             $em = $this->getDoctrine()->getManager();
@@ -89,7 +98,7 @@ class ProductInStoreController extends AbstractFOSRestController
         }
     }
    
-    public function product_add ()
+    public function product_add ()  : View
     {
         /* required json data from Request body:
          * {     "name": "Product X", //
@@ -130,7 +139,7 @@ class ProductInStoreController extends AbstractFOSRestController
         }
     }
 
-    public function product_edit (ProductInStore $product = null) 
+    public function product_edit (ProductInStore $product = null)  : View
     {
         /* required json data from Request body:
          * {    "name": "Product X",  
@@ -174,25 +183,39 @@ class ProductInStoreController extends AbstractFOSRestController
         }
     }
     
-    private function valid_json($string)  { 
+    private function valid_json($string) : bool 
+    { 
         json_decode($string);
-        if (json_last_error() !== 0) throw new Exception('Invalid json');
+        if (json_last_error() !== 0) {
+            throw new Exception('Invalid json');
+        }
         return true;
     }
     
-    private function if_string_is_natural_number($string) {
-        if (!is_numeric($string) or ($string - floor($string) != 0) or $string <= 0 ) throw new Exception ("Invalid value for PAGE");
+    private function if_string_is_natural_number($string) : bool|Exception
+    {
+        if (!is_numeric($string) || ($string - floor($string) != 0) || $string <= 0 ) {
+            throw new Exception ("Invalid value for PAGE");
+        }
         return true;
     }
 
-    private function is_elements_valid ($elements) {
-        if (!is_numeric($elements) or ($elements - floor($elements) != 0) or $elements <= 0 or $elements > 1000 ) throw new Exception ("Invalid value for ELEMENTS");
+    private function is_elements_valid ($elements) 
+    {
+        if (!is_numeric($elements) || ($elements - floor($elements) != 0) || $elements <= 0 || $elements > 1000 ) {
+            throw new Exception ("Invalid value for ELEMENTS");
+        }
         return true;
     }
 
-    private function is_name_valid ($name) {
-        if ($name === null) throw new Exception('Invalid key for NAME');
-        if (!is_string($name) or strlen($name) > 50 or strlen($name) < 2 or (trim($name) == "") ) throw new Exception('Invalid value for NAME');
+    private function is_name_valid ($name) 
+    {
+        if ($name === null) {
+            throw new Exception('Invalid key for NAME');
+        }
+        if (!is_string($name) || strlen($name) > 50 or strlen($name) < 2 || (trim($name) == "") ) {
+            throw new Exception('Invalid value for NAME');
+        }
         return true;
     }
 

@@ -2,7 +2,7 @@ version: '3'
 
 services:
   api:
-    container_name: yy
+    container_name: api
     image: php:8.0-apache
     volumes:
       - ./REST_API/:/var/www/
@@ -10,7 +10,7 @@ services:
     stdin_open: true
     
   client: 
-    container_name: oo
+    container_name: app
     image: php:8.0-apache
     ports:
       - 80:80
