@@ -27,7 +27,7 @@ fos_rest:
     format_listener:
         enabled: true 
         rules:
-            - { path: ^/, methods: [GET, DELETE, POST, PATCH], priorities: [ json]}
+            - { path: ^/, methods: [GET, DELETE, POST, PATCH], priorities: [json]}
     view:
         view_response_listener:  
           enabled: true

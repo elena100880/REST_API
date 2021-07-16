@@ -1,4 +1,5 @@
-<?php 
+<?php
+//declare(strict_types = 1);
 
 namespace App\Controller;
 
@@ -22,10 +23,10 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ProductInStoreController extends AbstractFOSRestController
 {    
-    public function products_get(Request $request, ProductInStore $product = null, $id) : View
+    public function products_get(Request $request, ProductInStore $product = null): View
     {
         /* required data from Request:
-        * amount - 0 (not in store), 1 - all products in store (default), 5 - products >5 in store
+        * select - 0 (not in store), 1 - all products in store (default), 5 - products >5 in store
         * page - from 1, default 1
         * elements - max 1000, default 20;
         *
@@ -33,7 +34,7 @@ class ProductInStoreController extends AbstractFOSRestController
         */
 
         try {
-
+            $id = $request->attributes->get('id');
             if ($id != 0) {
                 if (empty($product)) {
                     return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 404);
@@ -42,26 +43,26 @@ class ProductInStoreController extends AbstractFOSRestController
             }
             
     //validating data from Request:
-            $page = ($request->query->get('page')) ?? 1;
+            $page = ($request->query->get('page')) ?? "1";
             $this->if_string_is_natural_number($page);
                 
-            $elements = $request->query->get('elements') ?? 20;
+            $elements = $request->query->get('elements') ?? "20";
             $this->is_elements_valid($elements);
                   
     //quering products:  
-            $amount = $request->query->get('amount') ?? 1;
+            $select = $request->query->get('select') ?? 1;
             $dql = "SELECT p FROM App\Entity\ProductInStore p";
-            if ($amount == 1) {
+            if ($select == 1) {
                 $dql = $dql;
             }
-            elseif ($amount == 0) {
+            elseif ($select == 0) {
                 $dql = $dql.' WHERE p.amount = 0';
             }
-            elseif ($amount == 5) {
+            elseif ($select == 5) {
                 $dql = $dql.' WHERE p.amount > 5';
             }
             else {
-                return $this->view (["code" => 400, "message" =>"Invalid amount"], 400);
+                return $this->view (["code" => 400, "message" =>"Invalid select option"], 400);
             }
                 
             $em = $this->getDoctrine()->getManager();
@@ -73,19 +74,21 @@ class ProductInStoreController extends AbstractFOSRestController
             
             return $this->view(['code' => 200, 'message' => 'Search success', "data" => $productsPage, "total" => $totalElements], 200);
         }
-        catch (Exception $e) {
+        catch (\UnexpectedValueException $e) { //catching validation Exceptions
             return $this->view(["code" => 400, "message" => $e->getMessage()], 400);
         }
-        catch (\Throwable $e) {
+        catch (\Throwable $e) {   //catching other Errors/Exceptions 
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $message], 500);  //devInfo - only for dev mode
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $e], 500);  //devInfo - only for dev mode
         }
     }
 
-    public function product_delete (ProductInStore $product = null)   : View
+    public function product_delete (ProductInStore $product = null): View
     { 
         try {
-            if (empty($product)) return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 404);
+            if (empty($product)) {
+                return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 404);
+            }
 
             $em = $this->getDoctrine()->getManager();
             $em->remove($product);
@@ -94,11 +97,11 @@ class ProductInStoreController extends AbstractFOSRestController
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $message], 500);  //devInfo - only for dev mode
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $e], 500);  //devInfo - only for dev mode
         }
     }
    
-    public function product_add ()  : View
+    public function product_add (): View
     {
         /* required json data from Request body:
          * {     "name": "Product X", //
@@ -113,8 +116,8 @@ class ProductInStoreController extends AbstractFOSRestController
             $this->valid_json($json);
             $data = json_decode($json, true);
 
-            $name = trim($data['name']) ?? null;
-            $this->is_name_valid ($data['name']);
+            $name = $data['name'] ?? null;
+            $this->is_name_valid ($name);
                 
             $amount = $data['amount'] ?? 0; 
             $this->is_amount_valid ($amount);
@@ -124,22 +127,21 @@ class ProductInStoreController extends AbstractFOSRestController
             $product->setName($name);
             $product->setAmount($amount);
             $em = $this->getDoctrine()->getManager();
-            $em -> persist($product);
-            $em -> flush();
+            $em->persist($product);
+            $em->flush();
 
             return $this->view(["code" => 200, "message" => 'Add Success'], 200);
         }
-        catch (Exception $e) {
-            $g = $e->getCode();
+        catch (\UnexpectedValueException $e) {
             return $this->view(["code" => 400, "message" => $e->getMessage()], 400);
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $message], 500);  //devInfo - only for dev mode
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $e], 500);  //devInfo - only for dev mode
         }
     }
 
-    public function product_edit (ProductInStore $product = null)  : View
+    public function product_edit (ProductInStore $product = null): View
     {
         /* required json data from Request body:
          * {    "name": "Product X",  
@@ -155,11 +157,11 @@ class ProductInStoreController extends AbstractFOSRestController
             $this->valid_json($json);
             $data = json_decode($json, true);
             
-            if (isset($data['name'])) {
-                $name = trim($data['name']);
-                $this->is_name_valid ($data['name']);
+            if (isset($data['name']) ) {
+                $this->is_name_valid ($name);
                 $product->setName($name);
             }
+             
             if (isset($data['amount'])) {
                 $amount = $data['amount'];
                 $this->is_amount_valid ($amount);
@@ -173,13 +175,13 @@ class ProductInStoreController extends AbstractFOSRestController
 
             return $this->view(['code' => 200, 'message' => 'Update Success'], 200);
         }
-        catch (Exception $e) {
+        catch (\UnexpectedValueException $e) {
             $g = $e->getCode();
             return $this->view(["code" => 400, "message" => $e->getMessage()], 400);
         }
         catch (\Throwable $e) {
             $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $message], 500); //devInfo - only for dev mode
+            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $e], 500); //devInfo - only for dev mode
         }
     }
     
@@ -187,40 +189,40 @@ class ProductInStoreController extends AbstractFOSRestController
     { 
         json_decode($string);
         if (json_last_error() !== 0) {
-            throw new Exception('Invalid json');
+            throw new \UnexpectedValueException ('Invalid json');
         }
         return true;
     }
     
-    private function if_string_is_natural_number($string) : bool|Exception
+    private function if_string_is_natural_number($string) : bool
     {
-        if (!is_numeric($string) || ($string - floor($string) != 0) || $string <= 0 ) {
-            throw new Exception ("Invalid value for PAGE");
+        if (!is_numeric($string) || ($string - floor($string) > 0) ) {
+            throw new \UnexpectedValueException ("Invalid value for PAGE");
         }
         return true;
     }
 
-    private function is_elements_valid ($elements) 
+    private function is_elements_valid ($elements) : bool
     {
         if (!is_numeric($elements) || ($elements - floor($elements) != 0) || $elements <= 0 || $elements > 1000 ) {
-            throw new Exception ("Invalid value for ELEMENTS");
+            throw new \UnexpectedValueException ("Invalid value for ELEMENTS");
         }
         return true;
     }
 
-    private function is_name_valid ($name) 
+    private function is_name_valid ($name) : bool
     {
         if ($name === null) {
-            throw new Exception('Invalid key for NAME');
+            throw new \UnexpectedValueException ('Parameter NAME should be defined');
         }
-        if (!is_string($name) || strlen($name) > 50 or strlen($name) < 2 || (trim($name) == "") ) {
-            throw new Exception('Invalid value for NAME');
+        if (is_numeric($name) || strlen($name) > 50 or strlen($name) < 2 || (trim($name) == "") ) {
+            throw new \UnexpectedValueException ('Invalid value for NAME');
         }
         return true;
     }
 
-/*    private function is_amount_valid ($amount) {
-        if ( !is_int($amount) or $amount < 0) throw new Exception ("Invalid value of AMOUNT");
+    private function is_amount_valid ($amount) {
+        if (!is_integer($amount) || $amount < 0) throw new \UnexpectedValueException ("Invalid value of AMOUNT");
         return true;
-    }   */
+    }   
 }
