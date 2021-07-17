@@ -23,6 +23,21 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ProductInStoreController extends AbstractFOSRestController
 {    
+    //messages for Response:
+    private const _500_MESSAGE = "Service is not available. Try again later.";
+    private const PRODUCT_NOT_FOUND_404 = "Product NOT FOUND";
+    private const PRODUCT_FOUND_200 = "Product is FOUND";
+    private const PRODUCTS_FOUND_200 = "Search success";
+
+    //messages for REsponse when invalid parameters:
+    private const INVALID_SELECT_400 = "Invalid select option";
+    private const INVALID_JSON_400 = "Invalid json";
+    private const INVALID_PAGE_400 = "Invalid value for PAGE";
+    private const INVALID_ELEMENTS_400 = "Invalid value for ELEMENTS";
+    private const UNDEFINED_NAME_400 = "Parameter NAME should be defined";
+    private const INVALID_NAME_400 = "Invalid value for NAME";
+    private const INVALID_AMOUNT_400 = "Invalid value of AMOUNT";
+    
     public function products_get(Request $request, ProductInStore $product = null): View
     {
         /* required data from Request:
@@ -32,19 +47,18 @@ class ProductInStoreController extends AbstractFOSRestController
         *
         *  or just /id  (for getting one product by id, orher parameters are ignored)
         */
-
         try {
             $id = $request->attributes->get('id');
             if ($id != 0) {
                 if (empty($product)) {
-                    return $this->view (["code" => 404, "message" =>"Product NOT FOUND"], 404);
+                    return $this->view (["code" => 404, "message" => ProductInStoreController::PRODUCT_NOT_FOUND_404], 404);
                 }
-                return $this->view(['code' => 200, 'message' => 'Product is found', "data" => $product] , 200);
+                return $this->view(['code' => 200, 'message' => ProductInStoreController::PRODUCT_FOUND_200, "data" => $product] , 200);
             }
             
     //validating data from Request:
             $page = ($request->query->get('page')) ?? "1";
-            $this->if_string_is_natural_number($page);
+            $this->is_page_valid($page);
                 
             $elements = $request->query->get('elements') ?? "20";
             $this->is_elements_valid($elements);
@@ -62,7 +76,7 @@ class ProductInStoreController extends AbstractFOSRestController
                 $dql = $dql.' WHERE p.amount > 5';
             }
             else {
-                return $this->view (["code" => 400, "message" =>"Invalid select option"], 400);
+                return $this->view (["code" => 400, "message" => ProductInStoreController::INVALID_SELECT_400], 400);
             }
                 
             $em = $this->getDoctrine()->getManager();
@@ -72,14 +86,13 @@ class ProductInStoreController extends AbstractFOSRestController
             $productsPage = new Paginator($DQLquery); //$productsPage = $DQLquery ->getResult();
             $totalElements = count($productsPage);
             
-            return $this->view(['code' => 200, 'message' => 'Search success', "data" => $productsPage, "total" => $totalElements], 200);
+            return $this->view(['code' => 200, 'message' => ProductInStoreController::PRODUCTS_FOUND_200, "data" => $productsPage, "total" => $totalElements], 200);
         }
         catch (\UnexpectedValueException $e) { //catching validation Exceptions
             return $this->view(["code" => 400, "message" => $e->getMessage()], 400);
         }
-        catch (\Throwable $e) {   //catching other Errors/Exceptions 
-            $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $e], 500);  //devInfo - only for dev mode
+        catch (\Throwable $e) {
+            return $this->view(["code" => 500, "message" => ProductInStoreController:: _500_MESSAGE, "devInfo" => $e->getMessage()], 500); //devInfo - only for dev mode
         }
     }
 
@@ -96,8 +109,7 @@ class ProductInStoreController extends AbstractFOSRestController
             return $this->view(['code' => 200, 'message' => 'Delete Success'], 200);
         }
         catch (\Throwable $e) {
-            $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $e], 500);  //devInfo - only for dev mode
+            return $this->view(["code" => 500, "message" => ProductInStoreController:: _500_MESSAGE, "devInfo" => $e->getMessage()], 500); //devInfo - only for dev mode
         }
     }
    
@@ -132,12 +144,11 @@ class ProductInStoreController extends AbstractFOSRestController
 
             return $this->view(["code" => 200, "message" => 'Add Success'], 200);
         }
-        catch (\UnexpectedValueException $e) {
+        catch (\UnexpectedValueException $e) {  // catching validation Exceptions
             return $this->view(["code" => 400, "message" => $e->getMessage()], 400);
         }
         catch (\Throwable $e) {
-            $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $e], 500);  //devInfo - only for dev mode
+            return $this->view(["code" => 500, "message" => ProductInStoreController:: _500_MESSAGE, "devInfo" => $e->getMessage()], 500); //devInfo - only for dev mode
         }
     }
 
@@ -158,6 +169,7 @@ class ProductInStoreController extends AbstractFOSRestController
             $data = json_decode($json, true);
             
             if (isset($data['name']) ) {
+                $name = $data['name'];
                 $this->is_name_valid ($name);
                 $product->setName($name);
             }
@@ -172,7 +184,6 @@ class ProductInStoreController extends AbstractFOSRestController
             $em = $this->getDoctrine()->getManager();
             $em -> persist($product);
             $em->flush();
-
             return $this->view(['code' => 200, 'message' => 'Update Success'], 200);
         }
         catch (\UnexpectedValueException $e) {
@@ -180,8 +191,7 @@ class ProductInStoreController extends AbstractFOSRestController
             return $this->view(["code" => 400, "message" => $e->getMessage()], 400);
         }
         catch (\Throwable $e) {
-            $message = $e->getMessage(); //dev info
-            return $this->view(["code" => 500, "message" => "Service is not available. Try again later.", "devInfo" => $e], 500); //devInfo - only for dev mode
+            return $this->view(["code" => 500, "message" => ProductInStoreController::_500_MESSAGE, "devInfo" => $e->getMessage()], 500); //devInfo - only for dev mode
         }
     }
     
@@ -189,15 +199,15 @@ class ProductInStoreController extends AbstractFOSRestController
     { 
         json_decode($string);
         if (json_last_error() !== 0) {
-            throw new \UnexpectedValueException ('Invalid json');
+            throw new \UnexpectedValueException (ProductInStoreController::INVALID_JSON_400);
         }
         return true;
     }
     
-    private function if_string_is_natural_number($string) : bool
+    private function is_page_valid ($page) : bool
     {
-        if (!is_numeric($string) || ($string - floor($string) > 0) ) {
-            throw new \UnexpectedValueException ("Invalid value for PAGE");
+        if (!is_numeric($page) || ($page - floor($page) > 0) ) {
+            throw new \UnexpectedValueException (ProductInStoreController::INVALID_PAGE_400);
         }
         return true;
     }
@@ -205,7 +215,7 @@ class ProductInStoreController extends AbstractFOSRestController
     private function is_elements_valid ($elements) : bool
     {
         if (!is_numeric($elements) || ($elements - floor($elements) != 0) || $elements <= 0 || $elements > 1000 ) {
-            throw new \UnexpectedValueException ("Invalid value for ELEMENTS");
+            throw new \UnexpectedValueException (ProductInStoreController::INVALID_ELEMENTS_400);
         }
         return true;
     }
@@ -213,16 +223,16 @@ class ProductInStoreController extends AbstractFOSRestController
     private function is_name_valid ($name) : bool
     {
         if ($name === null) {
-            throw new \UnexpectedValueException ('Parameter NAME should be defined');
+            throw new \UnexpectedValueException (ProductInStoreController::UNDEFINED_NAME_400);
         }
         if (is_numeric($name) || strlen($name) > 50 or strlen($name) < 2 || (trim($name) == "") ) {
-            throw new \UnexpectedValueException ('Invalid value for NAME');
+            throw new \UnexpectedValueException (ProductInStoreController::INVALID_NAME_400);
         }
         return true;
     }
 
     private function is_amount_valid ($amount) {
-        if (!is_integer($amount) || $amount < 0) throw new \UnexpectedValueException ("Invalid value of AMOUNT");
+        if (!is_integer($amount) || $amount < 0) throw new \UnexpectedValueException (ProductInStoreController::INVALID_AMOUNT_400);
         return true;
     }   
 }
