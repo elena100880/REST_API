@@ -61,53 +61,50 @@ Execute commands:
 + `git clone https://github.com/elena100880/UI_for_REST_API.git`
 + `git clone https://github.com/elena100880/REST_API.git`
 
-in project folder:
+in each project folder (composer and docker-compose should be installed)::
 + `composer install`
 
-then put docker-composer.yaml into folder, which is a Parent for both projects folders, and execute there:
-+ `docker-compose up`
+then put a file **docker-composer_simple.yaml** and a folder **Dockerfile** into folder, which is a Parent-folder for both projects' folders, and execute there:
++ `docker-compose -f docker-compose_simple.yaml up`
 
-Then open localhost/index.php/<route_path_for_client_container> in your browser
+Then open localhost/<route_path_for_client_container> in your browser.
 
 
 ***
 ### Dockerfile:
 
-Docker-compose.yaml file in the project folder uses an official image php:8.0-apache.
+Docker-compose_simple.yaml uses a Dockerfile_simple with official image php:8.0-apache, pdo_mysql and mod rewrite (so you can skip index.php in URLs).
 
-Also, you can use my Dockerfile from rep: https://github.com/elena100880/dockerfile.
+Also, you can use my own and more complicated **Dockerfile_mine**. It aditionally includes the installation of Composer, XDebug for VSC, Nano, some PHP extensions.
 
-It includes php:8.0-apache official image (or you can change it to php:7.4-apache) and the installation of Composer, XDebug, Nano, some PHP extensions and enabling using mod rewrite (so you can skip index.php in URLs).
+Take notice that **building image from Dockerfile_mine will take more time**.
 
-Execute the following commands:
-+ `docker build . -t php:8.0-apache-xdebug` -  in the folder with Dockerfile.
-+ `docker run -p -d 80:80 -v "$PWD":/var/www -w="/var/www" php:8.0-apache-xdebug composer install` - in the projects folders.
-
-change 6th  and 14th lines in  docker-composer.yaml:
-+ `image: php:8.0-apache` into `image: php:8.0-apache-xdebug`
-
-change constant IP in ProductInStoreController in client app in line 20:
-+ `private const IP = "api/index.php"` into `private const IP =  "api"`
-
-put docker-composer.yaml into folder, which is a Parent for both projects folders, and execute there:
-+ `docker-compose up`
+In order to do so put a file **docker-composer_mine.yaml** and a folder **Dockerfile**(if not done yet) into folder, which is a Parent-folder for both projects' folders, and execute there:
++ `sudo chmod 777 ./REST_API/my_sql/ -R` - if project was initially launched with another Dockerfie
++ `docker-compose -f docker-compose_mine.yaml up`
 
 Then open localhost/<route_path_for_client_container> in your browser.
 
 
 ***
 ### DataBase
-For easier using  **/var/data.db** file is added to the REST_API repository.
+For easier using Database `/REST_API/my_sql/sql_data/mysql_db` is added to the repository.
 
-SQLite DB is used.
+MySQL DB is used. 
+
+PHPMyAdmin panel is available at **localhost:8080**.
+
+Credentials for phpmyadmin:
++ login - root 
++ password - 1008
 
 
 
 ***
 ### Pages in client's app:
-  * **localhost/index.php/products/all** - list and filter for **products in store**  with links to pages:
-  * add a product - **localhost/index.php/product/add**;
-  * editing and deleting a particular product - **localhost/index.php/product/edit/{id}**;
+  * **localhost/products/all** - list and filter for **products in store**  with links to pages:
+  * add a product - **localhost/product/add**;
+  * editing and deleting a particular product - **localhost/product/edit/{id}**;
 
 
 
