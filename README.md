@@ -61,7 +61,7 @@ Execute commands:
 + `git clone https://github.com/elena100880/UI_for_REST_API.git`
 + `git clone https://github.com/elena100880/REST_API.git`
 
-in each project folder (composer and docker-compose should be installed)::
+in each project folder (composer and docker-compose should be installed):
 + `composer install`
 
 then put a file **docker-composer_simple.yaml** and a folder **Dockerfile** into folder, which is a Parent-folder for both projects' folders, and execute there:
@@ -73,9 +73,9 @@ Then open localhost/<route_path_for_client_container> in your browser.
 ***
 ### Dockerfile:
 
-Docker-compose_simple.yaml uses a Dockerfile_simple with official image php:8.0-apache, pdo_mysql and mod rewrite (so you can skip index.php in URLs).
+Docker-compose_simple.yaml uses a Dockerfile_simple with official images (php:8.0-apache, mysql, phpmyadmin), pdo_mysql and mod rewrite (so you can skip index.php in URLs).
 
-Also, you can use my own and more complicated **Dockerfile_mine**. It aditionally includes the installation of Composer, XDebug for VSC, Nano, some PHP extensions.
+Also, you can use my own and more complicated **Dockerfile_mine**. It additionally includes the installation of Composer, XDebug for VSC, Nano, some PHP extensions.
 
 Take notice that **building image from Dockerfile_mine will take more time**.
 
@@ -88,9 +88,7 @@ Then open localhost/<route_path_for_client_container> in your browser.
 
 ***
 ### DataBase
-For easier using Database `/REST_API/my_sql/sql_data/mysql_db` is added to the repository.
-
-MySQL DB is used. 
+For easier using MySQL Database `/REST_API/my_sql/sql_data/mysql_db` is added to the repository.
 
 PHPMyAdmin panel is available at **localhost:8080**.
 

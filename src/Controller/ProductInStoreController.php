@@ -19,7 +19,7 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\View\View;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter; 
-use Symfony\Component\HttpKernel\Exception\HttpException;
+#use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ProductInStoreController extends AbstractFOSRestController
 {    
@@ -29,7 +29,7 @@ class ProductInStoreController extends AbstractFOSRestController
     private const PRODUCT_FOUND_200 = "Product is FOUND";
     private const PRODUCTS_FOUND_200 = "Search success";
 
-    //messages for REsponse when invalid parameters:
+    //messages for Response when invalid parameters:
     private const INVALID_SELECT_400 = "Invalid select option";
     private const INVALID_JSON_400 = "Invalid json";
     private const INVALID_PAGE_400 = "Invalid value for PAGE";
