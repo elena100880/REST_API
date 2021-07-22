@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Entity;
 
@@ -20,13 +20,13 @@ class ProductInStore
 
     /**
      * @ORM\Column(type="string", length=50)
-     *   
+     *
      */
     private $name;
 
     /**
      * @ORM\Column(type="integer")
-     *   
+     *
      */
     private $amount;
 
@@ -59,4 +59,3 @@ class ProductInStore
         return $this;
     }
 }
-
