@@ -67,20 +67,25 @@ class ProductInStoreController extends AbstractFOSRestController
             //querying products:
             $select = $request->query->get('select') ?? 1;
             $query = "SELECT p FROM App\Entity\ProductInStore p";
-            if (1 == $select) {
-                $dql = $query;
-            } elseif (0 == $select) {
-                $dql = $query.' WHERE p.amount = 0';
-            } elseif (5 == $select) {
-                $dql = $query.' WHERE p.amount > 5';
-            } else {
-                return $this->view(
-                    [
-                        'code' => 400,
-                        'message' => ProductInStoreController::INVALID_SELECT_400,
-                    ],
-                    400
-                );
+
+            switch ($select) {
+                case 1:
+                    $dql = $query;
+                    break;
+                case 0:
+                    $dql = $query.' WHERE p.amount = 0';
+                    break;
+                case 5:
+                    $dql = $query.' WHERE p.amount > 5';
+                    break;
+                default:
+                    return $this->view(
+                        [
+                            'code' => 400,
+                            'message' => ProductInStoreController::INVALID_SELECT_400,
+                        ],
+                        400
+                    );
             }
 
             $em = $this->getDoctrine()->getManager();
