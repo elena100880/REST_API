@@ -162,12 +162,9 @@ class ProductInStoreController extends AbstractFOSRestController
 
     public function productAdd(): View
     {
-        /*
-         * required json data from Request body:
-         * {     "name": "Product X", //
-         *      "amount": 1,   // 0 for default
-         * }
-         */
+        // required json data from Request body:
+        //       "name": "Product X",
+        //       "amount": 1,   // 0 for default
 
         try {
             $json = file_get_contents('php://input');
