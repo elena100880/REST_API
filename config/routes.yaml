@@ -1,22 +1,22 @@
 products_get:
     path: /products/{id}
     defaults: {id: 0}
-    controller: App\Controller\ProductInStoreController::products_get
+    controller: App\Controller\ProductInStoreController::productsGet
     methods: GET
 
 product_delete:
     path: /products/{id}
-    controller: App\Controller\ProductInStoreController::product_delete
+    controller: App\Controller\ProductInStoreController::productDelete
     methods: DELETE
 
 product_edit:
     path: /products/{id}
-    controller: App\Controller\ProductInStoreController::product_edit
+    controller: App\Controller\ProductInStoreController::productEdit
     methods: PATCH
 
 product_add:
     path: /products
-    controller: App\Controller\ProductInStoreController::product_add
+    controller: App\Controller\ProductInStoreController::productAdd
     methods: POST
   
 
